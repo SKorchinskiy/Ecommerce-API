@@ -103,3 +103,14 @@ async function updatePassword(req, res) {
     });
   }
 }
+
+module.exports = {
+  createUser,
+  getUserById,
+  getUserByUsername,
+  getUserByEmail,
+  updateUserById,
+  resetPasswordByEmail,
+  updatePassword,
+  deleteUserById,
+};
