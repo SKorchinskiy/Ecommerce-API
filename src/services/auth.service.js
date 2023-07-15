@@ -1,8 +1,10 @@
 const bcrypt = require("bcrypt");
+const userService = require("./user.service");
 
 async function signUp(user) {
   const { email } = user;
-  if (await getUserByEmail(email)) {
+  const userExists = await userService.getUserByEmail(email);
+  if (userExists) {
     throw new Error({
       status: 400,
       message: `The email ${email} is already in use! Please, try another email`,
@@ -13,7 +15,7 @@ async function signUp(user) {
 
 async function signIn(credentials) {
   const { email, password } = credentials;
-  const user = await getUserByEmail(email);
+  const user = await userService.getUserByEmail(email);
   if (!user) {
     throw new Error({
       status: 400,
