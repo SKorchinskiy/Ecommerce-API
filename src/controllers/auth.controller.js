@@ -42,14 +42,9 @@ async function resetPassword(req, res) {
   // password reset via email
 }
 
-async function updatePassword(req, res) {
-  // update password using current one
-}
-
 module.exports = {
   signUp,
   signIn,
   signOut,
   resetPassword,
-  updatePassword,
 };
