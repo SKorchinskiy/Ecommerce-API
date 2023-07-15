@@ -3,11 +3,12 @@ const authController = require("../controllers/auth.controller");
 
 const authRouter = express.Router();
 
-authRouter
-  .use("/sign-in", authController.signIn)
-  .use("/sign-up", authController.signUp)
-  .use("/sign-out", authController.signOut)
-  .use("/forgot", authController.resetPassword)
-  .use("/update-password", authController.updatePassword);
+authRouter.route("/sign-in").post(authController.signIn);
+
+authRouter.route("/sign-up").post(authController.signUp);
+
+authRouter.route("/sign-out").post(authController.signOut);
+
+authRouter.route("/forgot").post(authController.resetPassword);
 
 module.exports = authRouter;
