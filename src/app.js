@@ -9,7 +9,7 @@ const app = express();
 app.use(helmet());
 app.use(morgan("dev"));
 
-app.use("/api", router);
+app.use("/api/v1", router);
 
 app.all("*", (req, res) => {
   return res.status(404).json({
