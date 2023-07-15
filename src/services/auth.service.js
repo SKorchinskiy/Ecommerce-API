@@ -34,10 +34,6 @@ async function signOut() {
   // remove user's auth cookies
 }
 
-async function getUserByEmail(email) {
-  return {};
-}
-
 module.exports = {
   signUp,
   signIn,
