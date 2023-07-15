@@ -45,3 +45,11 @@ async function resetPassword(req, res) {
 async function updatePassword(req, res) {
   // update password using current one
 }
+
+module.exports = {
+  signUp,
+  signIn,
+  signOut,
+  resetPassword,
+  updatePassword,
+};
