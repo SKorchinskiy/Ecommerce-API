@@ -78,39 +78,11 @@ async function deleteUserById(req, res) {
   }
 }
 
-async function resetPasswordByEmail(req, res) {
-  try {
-    const { email } = req.body;
-    return await userService.resetPasswordByEmail(email);
-  } catch (error) {
-    const { status, message } = error;
-    return res.status(status).json({
-      success: false,
-      message,
-    });
-  }
-}
-
-async function updatePassword(req, res) {
-  try {
-    const credentials = req.body;
-    return await userService.updatePassword(credentials);
-  } catch (error) {
-    const { status, message } = error;
-    return res.status(status).json({
-      success: false,
-      message,
-    });
-  }
-}
-
 module.exports = {
   createUser,
   getUserById,
   getUserByUsername,
   getUserByEmail,
   updateUserById,
-  resetPasswordByEmail,
-  updatePassword,
   deleteUserById,
 };
