@@ -9,25 +9,45 @@ const connection = mysql.createConnection({
   database: process.env.DB_DATABASE,
 });
 
-function mysqlConnect() {
-  connection.connect((error) => {
-    if (error) {
-      console.error(
-        `Failed to establish connection with MySQL DB: ${error.stack}`
-      );
-    }
+async function mysqlConnect() {
+  return new Promise((resolve, reject) => {
+    connection.connect((error) => {
+      if (error) {
+        reject(`Failed to establish connection with MySQL DB: ${error.stack}`);
+      }
 
-    console.log(
-      `Successfully connected to MySQL DB. Connection id: ${connection.threadId}`
-    );
+      resolve(
+        `Successfully connected to MySQL DB. Connection id: ${connection.threadId}`
+      );
+    });
   });
 }
 
 function mysqlDisconnect() {
-  connection.end();
+  return new Promise((resolve, reject) => {
+    connection.end((error) => {
+      if (error) {
+        reject(`Failed to disconnect from MySQL DB: ${error.stack}`);
+      }
+
+      resolve(`Successfully disconnected from MySQL DB.`);
+    });
+  });
+}
+
+function executeQuery(query, values) {
+  return new Promise((resolve, reject) => {
+    connection.query(query, values || [], (err, results, fields) => {
+      if (err) {
+        reject(`Failed to execute query: ${err.stack}`);
+      }
+      resolve(results);
+    });
+  });
 }
 
 module.exports = {
   mysqlConnect,
   mysqlDisconnect,
+  executeQuery,
 };

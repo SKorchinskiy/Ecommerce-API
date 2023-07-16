@@ -7,8 +7,8 @@ require("dotenv").config();
 
 const httpServer = http.createServer(app);
 
-function startServer() {
-  db.mysqlConnect();
+async function startServer() {
+  await db.mysqlConnect();
 
   httpServer.listen(process.env.PORT, () => {
     console.log(`The application is listening on port ${process.env.PORT}`);
