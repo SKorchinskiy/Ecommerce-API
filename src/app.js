@@ -2,6 +2,7 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const express = require("express");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 
 require("dotenv").config();
 
@@ -10,6 +11,11 @@ const router = require("./routes");
 const app = express();
 
 app.use(helmet());
+app.use(
+  cors({
+    origin: "localhost",
+  })
+);
 app.use(express.json());
 app.use(cookieParser(process.env.COOKIE_SECRET));
 app.use(morgan("dev"));
