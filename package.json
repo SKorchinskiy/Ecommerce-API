@@ -30,9 +30,11 @@
   },
   "dependencies": {
     "bcrypt": "^5.1.0",
+    "cookie-parser": "^1.4.6",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.1",
     "morgan": "^1.10.0",
     "mysql": "^2.18.1"
   }
