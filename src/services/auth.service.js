@@ -2,15 +2,11 @@ const bcrypt = require("bcrypt");
 const userService = require("./user.service");
 
 async function signUp(data) {
-  const { email } = data;
-  const userExists = await userService.getUserByEmail(email);
-  if (userExists) {
-    throw new Error({
-      status: 400,
-      message: `The email ${email} is already in use! Please, try another email`,
-    });
-  }
-  // create new user and store it into db
+  const { password } = data;
+  const hashedPassword = await bcrypt.hash(password, 10);
+  data.password = hashedPassword;
+  console.log(data);
+  return await userService.createUser(data);
 }
 
 async function signIn(credentials) {
