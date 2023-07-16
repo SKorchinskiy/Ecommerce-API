@@ -3,6 +3,10 @@ const authService = require("../services/auth.service");
 async function signUp(req, res) {
   try {
     const user = await authService.signUp(req.body);
+    const accessTokenCookie = authService.getCookieWithJwtAccessToken({
+      username: user.username,
+    });
+    res.setHeader("Set-Cookie", [accessTokenCookie]);
     return res.status(201).json({
       success: true,
       user,
@@ -20,6 +24,10 @@ async function signIn(req, res) {
   try {
     const credentials = req.body;
     const user = await authService.signIn(credentials);
+    const accessTokenCookie = authService.getCookieWithJwtAccessToken({
+      username: user.username,
+    });
+    res.setHeader("Set-Cookie", [accessTokenCookie]);
     return res.status(200).json({
       success: true,
       user,
