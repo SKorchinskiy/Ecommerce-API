@@ -6,8 +6,7 @@ async function createUser(data) {
     INSERT INTO USER (username, email, password) 
     VALUES("${username}", "${email}", "${password}")
   `;
-  const user =
-    (await getUserByUsername(username)) || (await getUserById(email));
+  const user = await checkUserExists({ username, email });
   if (user) {
     const error = new Error(
       `User with provided email or username already exists!`
@@ -21,7 +20,7 @@ async function createUser(data) {
 
 async function checkUserExists(params) {
   const values = Object.keys(params).reduce((accumulate, key, index) => {
-    accumulate += (index ? "OR " : "") + `${key}="${params[key]}"`;
+    accumulate += (index ? " OR " : "") + `${key}="${params[key]}"`;
     return accumulate;
   }, "");
   const query = `
@@ -30,7 +29,7 @@ async function checkUserExists(params) {
     WHERE ${values}
   `;
   const result = await db.executeQuery(query);
-  return result ? true : false;
+  return result[0]["COUNT(*)"] ? true : false;
 }
 
 async function getAllUsers() {
