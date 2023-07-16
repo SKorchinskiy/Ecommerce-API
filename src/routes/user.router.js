@@ -1,7 +1,10 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
+const { isAuthenticated } = require("../middlewares/auth.middleware");
 
 const userRouter = express.Router();
+
+userRouter.use(isAuthenticated);
 
 userRouter
   .route("/")
