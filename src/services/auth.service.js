@@ -48,7 +48,9 @@ function getCookieWithJwtAccessToken(payload) {
   const accessToken = jwtService.sign(payload, process.env.VERIFICATION_TOKEN, {
     expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME,
   });
-  return `Authentication=${accessToken}; HttpOnly; Path=/; Secure; Max-Age=${process.env.ACCESS_TOKEN_EXPIRATION_TIME}`;
+  return `Authentication=${accessToken}; HttpOnly; Path=/; Secure; Max-Age=${
+    process.env.ACCESS_TOKEN_EXPIRATION_TIME / 1000
+  }`;
 }
 
 async function signOut() {
