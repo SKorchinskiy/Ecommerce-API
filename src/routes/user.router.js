@@ -3,18 +3,19 @@ const userController = require("../controllers/user.controller");
 
 const userRouter = express.Router();
 
-userRouter.route("/user").post(userController.createUser);
+userRouter
+  .route("/")
+  .get(userController.getAllUsers)
+  .post(userController.createUser);
 
 userRouter
-  .route("/user/:id")
+  .route("/:id")
   .get(userController.getUserById)
   .put(userController.updateUserById)
   .delete(userController.deleteUserById);
 
-userRouter.route("/user/email/:email").get(userController.getUserByEmail);
+userRouter.route("/email/:email").get(userController.getUserByEmail);
 
-userRouter
-  .route("/user/username/:username")
-  .get(userController.getUserByUsername);
+userRouter.route("/username/:username").get(userController.getUserByUsername);
 
 module.exports = userRouter;
