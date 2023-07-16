@@ -1,8 +1,8 @@
 const bcrypt = require("bcrypt");
 const userService = require("./user.service");
 
-async function signUp(user) {
-  const { email } = user;
+async function signUp(data) {
+  const { email } = data;
   const userExists = await userService.getUserByEmail(email);
   if (userExists) {
     throw new Error({

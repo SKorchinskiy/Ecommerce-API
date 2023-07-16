@@ -6,7 +6,8 @@ async function createUser(data) {
     INSERT INTO USER (username, email, password) 
     VALUES("${username}", "${email}", "${password}")
   `;
-  const user = getUserByUsername(username) || getUserById(email);
+  const user =
+    (await getUserByUsername(username)) || (await getUserById(email));
   if (user) {
     const error = new Error(
       `User with provided email or username already exists!`

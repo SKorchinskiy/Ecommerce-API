@@ -2,7 +2,11 @@ const authService = require("../services/auth.service");
 
 async function signUp(req, res) {
   try {
-    return await authService.signUp(req.user);
+    const user = await authService.signUp(req.user);
+    return res.status(201).json({
+      success: true,
+      user,
+    });
   } catch (error) {
     const { status, message } = error;
     return res.status(status).json({
@@ -15,7 +19,11 @@ async function signUp(req, res) {
 async function signIn(req, res) {
   try {
     const credentials = req.body;
-    return await authService.signIn(credentials);
+    const user = await authService.signIn(credentials);
+    return res.status(200).json({
+      success: true,
+      user,
+    });
   } catch (error) {
     const { status, message } = error;
     return res.status(status).json({
@@ -28,7 +36,11 @@ async function signIn(req, res) {
 async function signOut(req, res) {
   try {
     // figure out what data is needed
-    return await authService.signOut();
+    const user = await authService.signOut();
+    return res.status(200).json({
+      success: true,
+      user,
+    });
   } catch (error) {
     const { status, message } = error;
     return res.status(status).json({
