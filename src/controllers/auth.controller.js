@@ -2,7 +2,7 @@ const authService = require("../services/auth.service");
 
 async function signUp(req, res) {
   try {
-    const user = await authService.signUp(req.user);
+    const user = await authService.signUp(req.body);
     return res.status(201).json({
       success: true,
       user,
