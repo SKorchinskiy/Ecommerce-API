@@ -19,6 +19,20 @@ async function createUser(data) {
   return await getUserById(insertId);
 }
 
+async function checkUserExists(params) {
+  const values = Object.keys(params).reduce((accumulate, key, index) => {
+    accumulate += (index ? "OR " : "") + `${key}="${params[key]}"`;
+    return accumulate;
+  }, "");
+  const query = `
+    SELECT COUNT(*) 
+    FROM USER
+    WHERE ${values}
+  `;
+  const result = await db.executeQuery(query);
+  return result ? true : false;
+}
+
 async function getAllUsers() {
   const query = `
     SELECT id, username, email FROM USER
@@ -98,6 +112,7 @@ async function deleteUserById(id) {
 
 module.exports = {
   createUser,
+  checkUserExists,
   getAllUsers,
   getUserById,
   getUserByUsername,
