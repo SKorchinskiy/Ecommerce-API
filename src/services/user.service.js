@@ -1,10 +1,12 @@
 const db = require("../configs/db.config");
+const bcrypt = require("bcrypt");
 
 async function createUser(data) {
   const { username, email, password } = data;
+  const hashedPassword = await getEncryptedPassword(password);
   const query = `
     INSERT INTO USER (username, email, password) 
-    VALUES("${username}", "${email}", "${password}")
+    VALUES("${username}", "${email}", "${hashedPassword}")
   `;
   const user = await checkUserExists({ username, email });
   if (user) {
@@ -17,6 +19,11 @@ async function createUser(data) {
   const { insertId } = await db.executeQuery(query);
   await assignUserRoles(insertId, "user");
   return await getUserById(insertId);
+}
+
+async function getEncryptedPassword(password) {
+  const hashedPassword = await bcrypt.hash(password, 10);
+  return hashedPassword;
 }
 
 async function assignUserRoles(userId, ...roles) {
