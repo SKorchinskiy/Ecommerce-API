@@ -23,7 +23,7 @@ function isGrantedAccess(...roles) {
     if (!intersection) {
       return res.status(403).json({
         success: false,
-        message: `Access denied!`,
+        message: `Access denied! Proper permissions required!`,
       });
     }
     next();

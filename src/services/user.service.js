@@ -15,7 +15,24 @@ async function createUser(data) {
     throw error;
   }
   const { insertId } = await db.executeQuery(query);
+  await assignUserRoles(insertId, "user");
   return await getUserById(insertId);
+}
+
+async function assignUserRoles(userId, ...roles) {
+  if (!checkUserExists({ id: userId })) {
+    const error = new Error(`User with provided id was not found!`);
+    error.status = 404;
+    throw error;
+  }
+  const values = roles.map((role, index) => {
+    return (index ? "," : "") + `VALUES ("${userId}", "${role}")`;
+  });
+  const query = `
+    INSERT INTO ROLE (userId, role)
+    ${values}
+  `;
+  console.log(await db.executeQuery(query));
 }
 
 async function checkUserExists(params) {
