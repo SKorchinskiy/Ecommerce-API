@@ -1,5 +1,21 @@
 const productService = require("../services/product.service");
 
+async function getAllProducts(req, res) {
+  try {
+    const products = await productService.getAllProducts();
+    return res.status(200).json({
+      success: true,
+      products,
+    });
+  } catch (error) {
+    const { status, message } = error;
+    return res.status(status || 500).json({
+      success: false,
+      message,
+    });
+  }
+}
+
 async function getProductById(req, res) {
   try {
     const { id } = req.params;
@@ -70,6 +86,7 @@ async function deleteProductById(req, res) {
 }
 
 module.exports = {
+  getAllProducts,
   getProductById,
   createProduct,
   updateProductById,
