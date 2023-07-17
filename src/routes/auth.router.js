@@ -8,7 +8,10 @@ authRouter.route("/sign-in").post(authController.signIn);
 
 authRouter.route("/sign-up").post(authController.signUp);
 
-authRouter.route("/sign-out").all(isAuthenticated).post(authController.signOut);
+authRouter
+  .route("/sign-out")
+  .all(isAuthenticated())
+  .post(authController.signOut);
 
 authRouter.route("/forgot").post(authController.resetPassword);
 
