@@ -30,7 +30,7 @@ async function signIn(req, res) {
     res.setHeader("Set-Cookie", [accessTokenCookie]);
     return res.status(200).json({
       success: true,
-      user,
+      accessTokenCookie,
     });
   } catch (error) {
     const { status, message } = error;
@@ -43,11 +43,10 @@ async function signIn(req, res) {
 
 async function signOut(req, res) {
   try {
-    // figure out what data is needed
-    const user = await authService.signOut();
+    res.clearCookie("Authentication");
     return res.status(200).json({
       success: true,
-      user,
+      message: `Successfully sign out!`,
     });
   } catch (error) {
     const { status, message } = error;

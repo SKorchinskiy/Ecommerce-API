@@ -31,7 +31,6 @@ async function signIn(credentials) {
     throw error;
   }
   return user;
-  // assign cookies to user
 }
 
 async function isValidUserPassword(email, password) {
@@ -51,10 +50,6 @@ function getCookieWithJwtAccessToken(payload) {
   return `Authentication=${accessToken}; HttpOnly; Path=/; Secure; Max-Age=${
     process.env.ACCESS_TOKEN_EXPIRATION_TIME / 1000
   }`;
-}
-
-async function signOut() {
-  // remove user's auth cookies
 }
 
 module.exports = {
