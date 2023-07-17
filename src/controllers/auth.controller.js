@@ -3,13 +3,15 @@ const authService = require("../services/auth.service");
 async function signUp(req, res) {
   try {
     const user = await authService.signUp(req.body);
-    const accessTokenCookie = authService.getCookieWithJwtAccessToken({
-      username: user.username,
-    });
+    const { accessTokenCookie, token } =
+      authService.getCookieWithJwtAccessToken({
+        username: user.username,
+      });
     res.setHeader("Set-Cookie", [accessTokenCookie]);
     return res.status(201).json({
       success: true,
       user,
+      token,
     });
   } catch (error) {
     const { status, message } = error;
@@ -24,13 +26,14 @@ async function signIn(req, res) {
   try {
     const credentials = req.body;
     const user = await authService.signIn(credentials);
-    const accessTokenCookie = authService.getCookieWithJwtAccessToken({
-      username: user.username,
-    });
+    const { accessTokenCookie, token } =
+      authService.getCookieWithJwtAccessToken({
+        username: user.username,
+      });
     res.setHeader("Set-Cookie", [accessTokenCookie]);
     return res.status(200).json({
       success: true,
-      user,
+      token,
     });
   } catch (error) {
     const { status, message } = error;
@@ -43,11 +46,10 @@ async function signIn(req, res) {
 
 async function signOut(req, res) {
   try {
-    // figure out what data is needed
-    const user = await authService.signOut();
+    res.clearCookie("Authentication");
     return res.status(200).json({
       success: true,
-      user,
+      message: `Successfully signed out!`,
     });
   } catch (error) {
     const { status, message } = error;

@@ -31,7 +31,6 @@ async function signIn(credentials) {
     throw error;
   }
   return user;
-  // assign cookies to user
 }
 
 async function isValidUserPassword(email, password) {
@@ -45,21 +44,28 @@ async function isValidUserPassword(email, password) {
 }
 
 function getCookieWithJwtAccessToken(payload) {
+  const token = getAccessToken(payload);
+  const accessTokenCookie = `Authentication=${
+    token.accessToken
+  }; HttpOnly; Path=/; Secure; Max-Age=${token.expiresIn / 1000}`;
+  return {
+    token,
+    accessTokenCookie,
+  };
+}
+
+function getAccessToken(payload) {
   const accessToken = jwtService.sign(payload, process.env.VERIFICATION_TOKEN, {
     expiresIn: process.env.ACCESS_TOKEN_EXPIRATION_TIME,
   });
-  return `Authentication=${accessToken}; HttpOnly; Path=/; Secure; Max-Age=${
-    process.env.ACCESS_TOKEN_EXPIRATION_TIME / 1000
-  }`;
-}
-
-async function signOut() {
-  // remove user's auth cookies
+  return {
+    accessToken,
+    expiresIn: `${process.env.ACCESS_TOKEN_EXPIRATION_TIME}ms`,
+  };
 }
 
 module.exports = {
   signUp,
   signIn,
-  signOut,
   getCookieWithJwtAccessToken,
 };

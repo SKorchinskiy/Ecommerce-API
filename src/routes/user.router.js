@@ -1,10 +1,11 @@
 const express = require("express");
 const userController = require("../controllers/user.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
+const { isGrantedAccess } = require("../middlewares/role.middleware");
 
 const userRouter = express.Router();
 
-userRouter.use(isAuthenticated);
+userRouter.use(isAuthenticated(), isGrantedAccess("admin"));
 
 userRouter
   .route("/")
