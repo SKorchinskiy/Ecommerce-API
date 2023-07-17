@@ -6,9 +6,6 @@ const userService = require("./user.service");
 require("dotenv").config();
 
 async function signUp(data) {
-  const { password } = data;
-  const hashedPassword = await bcrypt.hash(password, 10);
-  data.password = hashedPassword;
   return await userService.createUser(data);
 }
 
