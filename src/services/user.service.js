@@ -39,7 +39,7 @@ async function assignUserRoles(userId, ...roles) {
     INSERT INTO ROLE (userId, role)
     ${values}
   `;
-  console.log(await db.executeQuery(query));
+  await db.executeQuery(query);
 }
 
 async function checkUserExists(params) {

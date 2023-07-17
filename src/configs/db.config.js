@@ -11,12 +11,6 @@ const connection = mysql.createConnection({
 
 async function mysqlConnect() {
   return new Promise((resolve, reject) => {
-    console.log({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-    });
     connection.connect((error) => {
       if (error) {
         reject(`Failed to establish connection with MySQL DB: ${error.stack}`);
@@ -45,7 +39,6 @@ function executeQuery(query) {
   return new Promise((resolve, reject) => {
     connection.query(query, (err, results) => {
       if (err) {
-        console.log(err.stack);
         reject(`Failed to execute query: ${err.stack}`);
       }
       resolve(results);
