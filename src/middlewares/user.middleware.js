@@ -9,7 +9,6 @@ function validateUserInput() {
       next();
     } catch (error) {
       const message = error?.details[0]?.message;
-      console.log("here", error);
       return res.status(400).json({
         success: false,
         message: `Invalid input format! ${message ?? ""}`,
