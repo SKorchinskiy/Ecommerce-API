@@ -57,8 +57,8 @@ async function checkUserExists(search) {
     FROM USER
     WHERE ${key}="${search[key]}"
   `;
-  const result = await db.executeQuery(query);
-  return result[0]["COUNT(*)"] ? true : false;
+  const [result] = await db.executeQuery(query);
+  return result["COUNT(*)"] ? true : false;
 }
 
 async function getAllUsers() {
