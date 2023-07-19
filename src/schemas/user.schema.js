@@ -12,6 +12,6 @@ const userValidationSchema = Joi.object({
     .min(8)
     .max(64)
     .message("password field doesn't meet the requirements"),
-});
+}).unknown(false);
 
 module.exports = userValidationSchema;

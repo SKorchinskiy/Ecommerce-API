@@ -10,7 +10,7 @@ const signInValidationSchema = Joi.object({
     .max(64)
     .message("password field doesn't meet the requirements")
     .required(),
-});
+}).unknown(false);
 
 const signUpValidationSchema = Joi.object({
   username: Joi.string()
@@ -27,7 +27,7 @@ const signUpValidationSchema = Joi.object({
     .max(64)
     .message("password field doesn't meet the requirements")
     .required(),
-});
+}).unknown(false);
 
 module.exports = {
   signInValidationSchema,
