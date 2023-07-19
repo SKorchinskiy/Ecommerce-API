@@ -7,6 +7,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const router = require("./routes");
+const { errorHandler } = require("./utils/error.handler");
 
 const app = express();
 
@@ -28,5 +29,7 @@ app.all("*", (req, res) => {
     message: `The path ${req.path} was not found`,
   });
 });
+
+app.use(errorHandler);
 
 module.exports = app;
