@@ -9,7 +9,6 @@ async function createUser(data) {
     VALUES("${username}", "${email}", "${hashedPassword}")
   `;
   const user = await checkUserExists([{ username }, { email }]);
-  console.log(user);
   if (user) {
     const error = new Error(
       `User with provided email or username already exists!`
@@ -51,14 +50,19 @@ async function checkUserExists(search) {
     }
     return exist;
   }
-  const key = Object.keys(search)[0];
-  const query = `
-    SELECT COUNT(*) 
-    FROM USER
-    WHERE ${key}="${search[key]}"
-  `;
-  const [result] = await db.executeQuery(query);
-  return result["COUNT(*)"] ? true : false;
+  let exists = false;
+  await Promise.all(
+    Object.keys(search).map(async (key) => {
+      const query = `
+      SELECT COUNT(*) 
+      FROM USER
+      WHERE ${key}="${search[key]}"
+    `;
+      const [result] = await db.executeQuery(query);
+      exists |= result["COUNT(*)"] ? true : false;
+    })
+  );
+  return exists;
 }
 
 async function getAllUsers() {
@@ -114,16 +118,23 @@ async function getUserByEmail(email) {
 }
 
 async function updateUserById(id, data) {
-  const params = Object.keys(data).reduce((accumulate, key, index) => {
-    return (accumulate += (index ? ", " : "") + `${key}="${data[key]}"`);
-  }, "");
-  const query = `
-  UPDATE USER
-  SET ${params}
-  WHERE id=${id}
-  `;
+  const exists = await checkUserExists(data);
+  if (exists) {
+    const error = new Error("User with provided params already exists!");
+    error.status = 400;
+    throw error;
+  }
+  await Promise.all(
+    Object.keys(data).map(async (key) => {
+      const query = `
+        UPDATE USER
+        SET ${key}="${data[key]}"
+        WHERE id=${id}
+      `;
+      await db.executeQuery(query);
+    })
+  );
   const user = await getUserById(id);
-  await db.executeQuery(query);
   return user;
 }
 
