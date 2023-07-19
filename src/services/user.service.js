@@ -8,7 +8,8 @@ async function createUser(data) {
     INSERT INTO USER (username, email, password) 
     VALUES("${username}", "${email}", "${hashedPassword}")
   `;
-  const user = await checkUserExists({ username, email });
+  const user = await checkUserExists([{ username }, { email }]);
+  console.log(user);
   if (user) {
     const error = new Error(
       `User with provided email or username already exists!`
@@ -42,15 +43,19 @@ async function assignUserRoles(userId, ...roles) {
   await db.executeQuery(query);
 }
 
-async function checkUserExists(params) {
-  const values = Object.keys(params).reduce((accumulate, key, index) => {
-    accumulate += (index ? " OR " : "") + `${key}="${params[key]}"`;
-    return accumulate;
-  }, "");
+async function checkUserExists(search) {
+  if (Array.isArray(search)) {
+    let exist = false;
+    for await (const param of search) {
+      exist |= await checkUserExists(param);
+    }
+    return exist;
+  }
+  const key = Object.keys(search)[0];
   const query = `
     SELECT COUNT(*) 
     FROM USER
-    WHERE ${values}
+    WHERE ${key}="${search[key]}"
   `;
   const result = await db.executeQuery(query);
   return result[0]["COUNT(*)"] ? true : false;
@@ -135,7 +140,6 @@ async function deleteUserById(id) {
 
 module.exports = {
   createUser,
-  checkUserExists,
   getAllUsers,
   getUserById,
   getUserByUsername,
