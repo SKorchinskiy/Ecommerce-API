@@ -8,7 +8,7 @@ async function createUser(data) {
     INSERT INTO USER (username, email, password) 
     VALUES("${username}", "${email}", "${hashedPassword}")
   `;
-  const user = await checkUserExists({ username, email });
+  const user = await checkUserExists([{ username }, { email }]);
   if (user) {
     const error = new Error(
       `User with provided email or username already exists!`
@@ -42,18 +42,27 @@ async function assignUserRoles(userId, ...roles) {
   await db.executeQuery(query);
 }
 
-async function checkUserExists(params) {
-  const values = Object.keys(params).reduce((accumulate, key, index) => {
-    accumulate += (index ? " OR " : "") + `${key}="${params[key]}"`;
-    return accumulate;
-  }, "");
-  const query = `
-    SELECT COUNT(*) 
-    FROM USER
-    WHERE ${values}
-  `;
-  const result = await db.executeQuery(query);
-  return result[0]["COUNT(*)"] ? true : false;
+async function checkUserExists(search) {
+  if (Array.isArray(search)) {
+    let exist = false;
+    for await (const param of search) {
+      exist |= await checkUserExists(param);
+    }
+    return exist;
+  }
+  let exists = false;
+  await Promise.all(
+    Object.keys(search).map(async (key) => {
+      const query = `
+      SELECT COUNT(*) 
+      FROM USER
+      WHERE ${key}="${search[key]}"
+    `;
+      const [result] = await db.executeQuery(query);
+      exists |= result["COUNT(*)"] ? true : false;
+    })
+  );
+  return exists;
 }
 
 async function getAllUsers() {
@@ -109,16 +118,23 @@ async function getUserByEmail(email) {
 }
 
 async function updateUserById(id, data) {
-  const params = Object.keys(data).reduce((accumulate, key, index) => {
-    return (accumulate += (index ? ", " : "") + `${key}="${data[key]}"`);
-  }, "");
-  const query = `
-  UPDATE USER
-  SET ${params}
-  WHERE id=${id}
-  `;
+  const exists = await checkUserExists(data);
+  if (exists) {
+    const error = new Error("User with provided params already exists!");
+    error.status = 400;
+    throw error;
+  }
+  await Promise.all(
+    Object.keys(data).map(async (key) => {
+      const query = `
+        UPDATE USER
+        SET ${key}="${data[key]}"
+        WHERE id=${id}
+      `;
+      await db.executeQuery(query);
+    })
+  );
   const user = await getUserById(id);
-  await db.executeQuery(query);
   return user;
 }
 
@@ -135,7 +151,6 @@ async function deleteUserById(id) {
 
 module.exports = {
   createUser,
-  checkUserExists,
   getAllUsers,
   getUserById,
   getUserByUsername,

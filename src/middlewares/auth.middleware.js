@@ -1,5 +1,10 @@
 const jwtService = require("jsonwebtoken");
 const userService = require("../services/user.service");
+const Joi = require("joi");
+const {
+  signInValidationSchema,
+  signUpValidationSchema,
+} = require("../schemas/auth.schema");
 
 require("dotenv").config();
 
@@ -29,6 +34,40 @@ function isAuthenticated() {
   };
 }
 
+function validateLogIn() {
+  return (req, res, next) => {
+    try {
+      const data = req.body;
+      Joi.assert(data, signInValidationSchema);
+      next();
+    } catch (error) {
+      const message = error?.details[0]?.message;
+      return res.status(400).json({
+        success: false,
+        message: `Invalid input format! ${message}`,
+      });
+    }
+  };
+}
+
+function validateRegistration() {
+  return (req, res, next) => {
+    try {
+      const data = req.body;
+      Joi.assert(data, signUpValidationSchema);
+      next();
+    } catch (error) {
+      const message = error?.details[0]?.message;
+      return res.status(400).json({
+        success: false,
+        message: `Invalid input format! ${message}`,
+      });
+    }
+  };
+}
+
 module.exports = {
   isAuthenticated,
+  validateLogIn,
+  validateRegistration,
 };

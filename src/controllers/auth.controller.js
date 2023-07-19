@@ -1,6 +1,6 @@
 const authService = require("../services/auth.service");
 
-async function signUp(req, res) {
+async function signUp(req, res, next) {
   try {
     const user = await authService.signUp(req.body);
     const { accessTokenCookie, token } =
@@ -14,15 +14,11 @@ async function signUp(req, res) {
       token,
     });
   } catch (error) {
-    const { status, message } = error;
-    return res.status(status).json({
-      success: false,
-      message,
-    });
+    next(error);
   }
 }
 
-async function signIn(req, res) {
+async function signIn(req, res, next) {
   try {
     const credentials = req.body;
     const user = await authService.signIn(credentials);
@@ -36,15 +32,11 @@ async function signIn(req, res) {
       token,
     });
   } catch (error) {
-    const { status, message } = error;
-    return res.status(status).json({
-      success: false,
-      message,
-    });
+    next(error);
   }
 }
 
-async function signOut(req, res) {
+async function signOut(req, res, next) {
   try {
     res.clearCookie("Authentication");
     return res.status(200).json({
@@ -52,15 +44,11 @@ async function signOut(req, res) {
       message: `Successfully signed out!`,
     });
   } catch (error) {
-    const { status, message } = error;
-    return res.status(status).json({
-      success: false,
-      message,
-    });
+    next(error);
   }
 }
 
-async function resetPassword(req, res) {
+async function resetPassword(req, res, next) {
   // password reset via email
 }
 
