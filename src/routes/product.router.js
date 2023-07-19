@@ -2,10 +2,13 @@ const express = require("express");
 const productController = require("../controllers/product.controller");
 const { isAuthenticated } = require("../middlewares/auth.middleware");
 const { isGrantedAccess } = require("../middlewares/role.middleware");
+const { validateProductInput } = require("../middlewares/product.middleware");
 
 const productRouter = express.Router();
 
 const adminHandlers = [isAuthenticated(), isGrantedAccess("admin")];
+
+productRouter.use(validateProductInput());
 
 productRouter
   .route("/")
