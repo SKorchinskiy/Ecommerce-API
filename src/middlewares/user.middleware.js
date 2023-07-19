@@ -18,4 +18,4 @@ function validateUserInput() {
   };
 }
 
-module.exports = validateUserInput;
+module.exports = { validateUserInput };
