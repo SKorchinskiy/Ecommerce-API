@@ -78,17 +78,16 @@ async function getUserByUsername(username) {
 }
 
 async function getUserByEmail(email) {
-  const query = `
-    SELECT id, username, email 
-    FROM USER 
-    WHERE email="${email}"
-  `;
-  const [user] = await db.executeQuery(query);
+  const [user] = await db("user")
+    .where("email", email)
+    .select("id", "username", "email");
+
   if (!user) {
     const error = new Error(`User with provided email was not found!`);
     error.status = 404;
     throw error;
   }
+
   return user;
 }
 
@@ -99,34 +98,24 @@ async function getUserRoles(userId) {
 }
 
 async function updateUserById(id, data) {
-  // const exists = await checkUserExists(data);
-  if (exists) {
-    const error = new Error("User with provided params already exists!");
+  const paramsReserved = await checkUserParamsInUse(data);
+  if (paramsReserved) {
+    const error = new Error("User with provided parameters already exists!");
     error.status = 400;
     throw error;
   }
-  await Promise.all(
-    Object.keys(data).map(async (key) => {
-      const query = `
-        UPDATE USER
-        SET ${key}="${data[key]}"
-        WHERE id=${id}
-      `;
-      await db.executeQuery(query);
-    })
-  );
-  const user = await getUserById(id);
-  return user;
+  await db("user").where("id", id).update(data);
+  return await getUserById(id);
+}
+
+async function deleteAllUserRoles(userId) {
+  return await db("role").where("userId", userId).del("role");
 }
 
 async function deleteUserById(id) {
-  const query = `
-    DELETE 
-    FROM USER
-    WHERE id=${id}
-  `;
   const user = await getUserById(id);
-  await db.executeQuery(query);
+  await deleteAllUserRoles(id);
+  await db("user").where("id", id).del("");
   return user;
 }
 
