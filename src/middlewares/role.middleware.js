@@ -11,8 +11,8 @@ function isGrantedAccess(...roles) {
       });
     }
     const userRoles = await getUserRoles(user.id);
-    const isAllowed = userRoles.filter((role) => roles.includes(role));
-    if (!isAllowed) {
+    const matchingRoles = userRoles.filter((role) => roles.includes(role));
+    if (!matchingRoles.length) {
       return res.status(403).json({
         success: false,
         message: `Access denied! Proper permissions required!`,
