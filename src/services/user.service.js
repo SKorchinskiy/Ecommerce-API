@@ -46,10 +46,7 @@ async function assignUserRole(userId, role) {
 }
 
 async function getAllUsers() {
-  const query = `
-    SELECT id, username, email FROM USER
-  `;
-  return await db.executeQuery(query);
+  return await db("user").select("id", "username", "email");
 }
 
 async function getUserById(id) {
@@ -67,17 +64,16 @@ async function getUserById(id) {
 }
 
 async function getUserByUsername(username) {
-  const query = `
-    SELECT id, username, email 
-    FROM USER 
-    WHERE username="${username}"
-  `;
-  const [user] = await db.executeQuery(query);
+  const [user] = await db("user")
+    .where("username", username)
+    .select("id", "username", "email");
+
   if (!user) {
     const error = new Error(`User with provided username was not found!`);
     error.status = 404;
     throw error;
   }
+
   return user;
 }
 
@@ -94,6 +90,12 @@ async function getUserByEmail(email) {
     throw error;
   }
   return user;
+}
+
+async function getUserRoles(userId) {
+  const data = await db("role").where("userId", userId).select("role");
+  const roles = data.map((roleObj) => roleObj.role);
+  return roles;
 }
 
 async function updateUserById(id, data) {
@@ -134,6 +136,7 @@ module.exports = {
   getUserById,
   getUserByUsername,
   getUserByEmail,
+  getUserRoles,
   updateUserById,
   deleteUserById,
 };
