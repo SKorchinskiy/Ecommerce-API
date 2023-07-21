@@ -1,58 +1,54 @@
-const db = require("../configs/db.config");
+const { mysql: db } = require("../configs/db.config");
 
 async function getAllProducts() {
-  const query = `SELECT * FROM PRODUCT`;
-  const products = await db.executeQuery(query);
-  return products;
+  return await db("product").select("id", "productName", "price", "quantity");
 }
 
 async function getProductById(id) {
-  const query = `
-      SELECT id, productName, price, quantity, createdAt
-      FROM PRODUCT
-      WHERE id=${id}
-    `;
-  const [product] = await db.executeQuery(query);
+  const [product] = await db("product")
+    .where("id", id)
+    .select("id", "productName", "price", "quantity");
+
   if (!product) {
     const error = new Error(`Requested product was not found!`);
     error.status = 404;
     throw error;
   }
+
   return product;
 }
 
 async function createProduct(data) {
   const { productName, price, quantity } = data;
-  const query = `
-      INSERT INTO PRODUCT (productName, price, quantity)
-      VALUES ("${productName}", "${price}", "${quantity}")
-  `;
-  const { insertId } = await db.executeQuery(query);
-  const product = await getProductById(insertId);
-  return product;
+  const [insertId] = await db("product").insert({
+    productName,
+    price,
+    quantity,
+  });
+  return await getProductById(insertId);
 }
 
 async function updateProductById(id, data) {
-  const values = Object.keys(data).map((key, index) => {
-    return (index ? "," : "") + `${key}="${data[key]}"`;
-  });
-  const query = `
-        UPDATE PRODUCT
-        SET ${values}
-        WHERE id=${id}
-  `;
-  await db.executeQuery(query);
-  const product = await getProductById(id);
-  return product;
+  const exists = await checkProductExists(id);
+  if (!exists) {
+    const error = new Error("product was not found!");
+    error.status = 404;
+    throw error;
+  }
+  await db("product").where("id", id).update(data);
+  return await getProductById(id);
+}
+
+async function checkProductExists(id) {
+  const [product] = await db("product")
+    .where("id", id)
+    .select("id", "productName", "price", "quantity");
+  return product ? true : false;
 }
 
 async function deleteProductById(id) {
   const product = await getProductById(id);
-  const query = `
-      DELETE FROM PRODUCT
-      WHERE id=${id}
-  `;
-  await db.executeQuery(query);
+  await db("product").where("id", id).del();
   return product;
 }
 
