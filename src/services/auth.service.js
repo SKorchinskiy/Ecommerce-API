@@ -1,4 +1,4 @@
-const db = require("../configs/db.config");
+const { mysql: db } = require("../configs/db.config");
 const bcrypt = require("bcrypt");
 const jwtService = require("jsonwebtoken");
 const userService = require("./user.service");
@@ -31,13 +31,8 @@ async function signIn(credentials) {
 }
 
 async function isValidUserPassword(email, password) {
-  const query = `
-    SELECT password
-    FROM USER
-    WHERE email="${email}"
-  `;
-  const [data] = await db.executeQuery(query);
-  return await bcrypt.compare(password, data.password);
+  const [user] = await db("user").where("email", email).select("password");
+  return await bcrypt.compare(password, user.password);
 }
 
 function getCookieWithJwtAccessToken(payload) {

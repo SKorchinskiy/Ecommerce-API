@@ -1,4 +1,5 @@
 const db = require("../configs/db.config");
+const { getUserRoles } = require("../services/user.service");
 
 function isGrantedAccess(...roles) {
   return async (req, res, next) => {
@@ -9,18 +10,9 @@ function isGrantedAccess(...roles) {
         message: `Access denied! Please, authenticate!`,
       });
     }
-    const query = `
-        SELECT role
-        FROM ROLE
-        WHERE userId=${user.id}
-    `;
-    const userRoles = (await db.executeQuery(query)).map((roleObj) => {
-      return roleObj.role;
-    });
-    const intersection = roles.reduce((accumulator, role) => {
-      return accumulator + userRoles.includes(role);
-    }, 0);
-    if (!intersection) {
+    const userRoles = await getUserRoles(user.id);
+    const matchingRoles = userRoles.filter((role) => roles.includes(role));
+    if (!matchingRoles.length) {
       return res.status(403).json({
         success: false,
         message: `Access denied! Proper permissions required!`,
