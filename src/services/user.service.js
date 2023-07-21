@@ -1,24 +1,21 @@
-const db = require("../configs/db.config");
 const bcrypt = require("bcrypt");
+const { mysql: db } = require("../configs/db.config");
 
 async function createUser(data) {
   const { username, email, password } = data;
   const hashedPassword = await getEncryptedPassword(password);
-  const query = `
-    INSERT INTO USER (username, email, password) 
-    VALUES("${username}", "${email}", "${hashedPassword}")
-  `;
-  const user = await checkUserExists([{ username }, { email }]);
-  console.log(user);
-  if (user) {
-    const error = new Error(
-      `User with provided email or username already exists!`
-    );
+  const paramsReserved = await checkUserParamsInUse({ username, email });
+  if (paramsReserved) {
+    const error = new Error(`User with provided parameters already exists!`);
     error.status = 400;
     throw error;
   }
-  const { insertId } = await db.executeQuery(query);
-  await assignUserRoles(insertId, "user");
+  const [insertId] = await db("user").insert({
+    username,
+    email,
+    password: hashedPassword,
+  });
+  await assignUserRole(insertId, "user");
   return await getUserById(insertId);
 }
 
@@ -27,114 +24,98 @@ async function getEncryptedPassword(password) {
   return hashedPassword;
 }
 
-async function assignUserRoles(userId, ...roles) {
-  if (!checkUserExists({ id: userId })) {
-    const error = new Error(`User with provided id was not found!`);
+async function checkUserParamsInUse(params) {
+  const [response] = await db("user").where(function () {
+    Object.keys(params).forEach((key, index) => {
+      const param = { [key]: params[key] };
+      index ? this.orWhere(param) : this.where(param);
+    });
+  });
+  return response ? true : false;
+}
+
+async function assignUserRole(userId, role) {
+  if (!checkUserParamsInUse({ id: userId })) {
+    const error = new Error(`User was not found!`);
     error.status = 404;
     throw error;
   }
-  const values = roles.map((role, index) => {
-    return (index ? "," : "") + `VALUES ("${userId}", "${role}")`;
-  });
-  const query = `
-    INSERT INTO ROLE (userId, role)
-    ${values}
-  `;
-  await db.executeQuery(query);
-}
 
-async function checkUserExists(search) {
-  if (Array.isArray(search)) {
-    let exist = false;
-    for await (const param of search) {
-      exist |= await checkUserExists(param);
-    }
-    return exist;
-  }
-  const key = Object.keys(search)[0];
-  const query = `
-    SELECT COUNT(*) 
-    FROM USER
-    WHERE ${key}="${search[key]}"
-  `;
-  const [result] = await db.executeQuery(query);
-  return result["COUNT(*)"] ? true : false;
+  const [insertId] = await db("role").insert({ userId, role });
+  return insertId;
 }
 
 async function getAllUsers() {
-  const query = `
-    SELECT id, username, email FROM USER
-  `;
-  return await db.executeQuery(query);
+  return await db("user").select("id", "username", "email");
 }
 
 async function getUserById(id) {
-  const query = `
-    SELECT id, username, email 
-    FROM USER 
-    WHERE id=${id}
-  `;
-  const [user] = await db.executeQuery(query);
+  const [user] = await db("user")
+    .where("id", id)
+    .select("id", "username", "email");
+
   if (!user) {
-    const error = new Error(`User with provided id was not found!`);
+    const error = new Error(`User was not found!`);
     error.status = 404;
     throw error;
   }
+
   return user;
 }
 
 async function getUserByUsername(username) {
-  const query = `
-    SELECT id, username, email 
-    FROM USER 
-    WHERE username="${username}"
-  `;
-  const [user] = await db.executeQuery(query);
+  const [user] = await db("user")
+    .where("username", username)
+    .select("id", "username", "email");
+
   if (!user) {
     const error = new Error(`User with provided username was not found!`);
     error.status = 404;
     throw error;
   }
+
   return user;
 }
 
 async function getUserByEmail(email) {
-  const query = `
-    SELECT id, username, email 
-    FROM USER 
-    WHERE email="${email}"
-  `;
-  const [user] = await db.executeQuery(query);
+  const [user] = await db("user")
+    .where("email", email)
+    .select("id", "username", "email");
+
   if (!user) {
     const error = new Error(`User with provided email was not found!`);
     error.status = 404;
     throw error;
   }
+
   return user;
+}
+
+async function getUserRoles(userId) {
+  const data = await db("role").where("userId", userId).select("role");
+  const roles = data.map((roleObj) => roleObj.role);
+  return roles;
 }
 
 async function updateUserById(id, data) {
-  const params = Object.keys(data).reduce((accumulate, key, index) => {
-    return (accumulate += (index ? ", " : "") + `${key}="${data[key]}"`);
-  }, "");
-  const query = `
-  UPDATE USER
-  SET ${params}
-  WHERE id=${id}
-  `;
-  const user = await getUserById(id);
-  await db.executeQuery(query);
-  return user;
+  const paramsReserved = await checkUserParamsInUse(data);
+  if (paramsReserved) {
+    const error = new Error("User with provided parameters already exists!");
+    error.status = 400;
+    throw error;
+  }
+  await db("user").where("id", id).update(data);
+  return await getUserById(id);
+}
+
+async function deleteAllUserRoles(userId) {
+  return await db("role").where("userId", userId).del("role");
 }
 
 async function deleteUserById(id) {
-  const query = `
-    DELETE 
-    FROM USER
-    WHERE id=${id}
-  `;
   const user = await getUserById(id);
-  await db.executeQuery(query);
+  await deleteAllUserRoles(id);
+  await db("user").where("id", id).del("");
   return user;
 }
 
@@ -144,6 +125,7 @@ module.exports = {
   getUserById,
   getUserByUsername,
   getUserByEmail,
+  getUserRoles,
   updateUserById,
   deleteUserById,
 };
