@@ -5,7 +5,6 @@ async function createUser(data) {
   const { username, email, password } = data;
   const hashedPassword = await getEncryptedPassword(password);
   const paramsReserved = await checkUserParamsInUse({ username, email });
-  console.log(hashedPassword, paramsReserved);
   if (paramsReserved) {
     const error = new Error(`User with provided parameters already exists!`);
     error.status = 400;
