@@ -1,8 +1,10 @@
 const productService = require("../services/product.service");
+const queryUtils = require("../utils/query.handler");
 
 async function getAllProducts(req, res, next) {
   try {
-    const products = await productService.getAllProducts();
+    const params = queryUtils.getPagination(req.query);
+    const products = await productService.getAllProducts(params);
     return res.status(200).json({
       success: true,
       products,
@@ -27,7 +29,7 @@ async function getProductById(req, res, next) {
 
 async function createProduct(req, res, next) {
   try {
-    const data = req.body;
+    const data = Object.assign({}, req.body, { ownerId: req.user.id });
     const product = await productService.createProduct(data);
     return res.status(200).json({
       success: true,
