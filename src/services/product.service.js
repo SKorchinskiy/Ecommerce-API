@@ -7,7 +7,7 @@ async function getAllProducts() {
 async function getProductById(id) {
   const [product] = await db("product")
     .where("id", id)
-    .select("id", "productName", "price", "quantity");
+    .select("id", "productName", "price", "quantity", "ownerId");
 
   if (!product) {
     const error = new Error(`Requested product was not found!`);
@@ -19,11 +19,12 @@ async function getProductById(id) {
 }
 
 async function createProduct(data) {
-  const { productName, price, quantity } = data;
+  const { productName, price, quantity, ownerId } = data;
   const [insertId] = await db("product").insert({
     productName,
     price,
     quantity,
+    ownerId,
   });
   return await getProductById(insertId);
 }

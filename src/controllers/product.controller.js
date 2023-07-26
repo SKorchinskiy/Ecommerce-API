@@ -27,7 +27,7 @@ async function getProductById(req, res, next) {
 
 async function createProduct(req, res, next) {
   try {
-    const data = req.body;
+    const data = Object.assign({}, req.body, { ownerId: req.user.id });
     const product = await productService.createProduct(data);
     return res.status(200).json({
       success: true,
