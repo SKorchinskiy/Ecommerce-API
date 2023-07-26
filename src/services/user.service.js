@@ -1,22 +1,29 @@
 const bcrypt = require("bcrypt");
 const { mysql: db } = require("../configs/db.config");
+const { transaction } = require("../utils/transaction.handler");
 
 async function createUser(data) {
   const { username, email, password } = data;
   const hashedPassword = await getEncryptedPassword(password);
   const paramsReserved = await checkUserParamsInUse({ username, email });
+
   if (paramsReserved) {
     const error = new Error(`User with provided parameters already exists!`);
     error.status = 400;
     throw error;
   }
-  const [insertId] = await db("user").insert({
-    username,
-    email,
-    password: hashedPassword,
+
+  const userId = await transaction(async (trx) => {
+    const [insertId] = await trx("user").insert({
+      username,
+      email,
+      password: hashedPassword,
+    });
+    await assignUserRole(insertId, "user", trx);
+    return insertId;
   });
-  await assignUserRole(insertId, "user");
-  return await getUserById(insertId);
+
+  return await getUserById(userId);
 }
 
 async function getEncryptedPassword(password) {
@@ -34,14 +41,14 @@ async function checkUserParamsInUse(params) {
   return response ? true : false;
 }
 
-async function assignUserRole(userId, role) {
+async function assignUserRole(userId, role, context = db) {
   if (!checkUserParamsInUse({ id: userId })) {
     const error = new Error(`User was not found!`);
     error.status = 404;
     throw error;
   }
 
-  const [insertId] = await db("role").insert({ userId, role });
+  const [insertId] = await context("role").insert({ userId, role });
   return insertId;
 }
 
@@ -108,13 +115,8 @@ async function updateUserById(id, data) {
   return await getUserById(id);
 }
 
-async function deleteAllUserRoles(userId) {
-  return await db("role").where("userId", userId).del("role");
-}
-
 async function deleteUserById(id) {
   const user = await getUserById(id);
-  await deleteAllUserRoles(id);
   await db("user").where("id", id).del("");
   return user;
 }
