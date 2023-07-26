@@ -52,8 +52,11 @@ async function assignUserRole(userId, role, context = db) {
   return insertId;
 }
 
-async function getAllUsers() {
-  return await db("user").select("id", "username", "email");
+async function getAllUsers({ offset, limit }) {
+  return await db("user")
+    .select("id", "username", "email")
+    .offset(offset)
+    .limit(limit);
 }
 
 async function getUserById(id) {

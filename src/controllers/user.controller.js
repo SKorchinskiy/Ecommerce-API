@@ -1,4 +1,5 @@
 const userService = require("../services/user.service");
+const queryUtils = require("../utils/query.handler");
 
 async function createUser(req, res) {
   try {
@@ -19,7 +20,8 @@ async function createUser(req, res) {
 
 async function getAllUsers(req, res) {
   try {
-    const users = await userService.getAllUsers();
+    const params = queryUtils.getPagination(req.query);
+    const users = await userService.getAllUsers(params);
     return res.status(200).json({
       success: true,
       users,
