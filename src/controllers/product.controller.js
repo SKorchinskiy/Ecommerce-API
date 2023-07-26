@@ -1,8 +1,10 @@
 const productService = require("../services/product.service");
+const queryUtils = require("../utils/query.handler");
 
 async function getAllProducts(req, res, next) {
   try {
-    const products = await productService.getAllProducts();
+    const params = queryUtils.getPagination(req.query);
+    const products = await productService.getAllProducts(params);
     return res.status(200).json({
       success: true,
       products,

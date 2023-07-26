@@ -1,7 +1,10 @@
 const { mysql: db } = require("../configs/db.config");
 
-async function getAllProducts() {
-  return await db("product").select("id", "productName", "price", "quantity");
+async function getAllProducts({ offset, limit }) {
+  return await db("product")
+    .select("id", "productName", "price", "quantity")
+    .offset(offset)
+    .limit(limit);
 }
 
 async function getProductById(id) {
