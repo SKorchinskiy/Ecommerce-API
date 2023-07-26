@@ -115,13 +115,8 @@ async function updateUserById(id, data) {
   return await getUserById(id);
 }
 
-// async function deleteAllUserRoles(userId) {
-//   return await db("role").where("userId", userId).del("role");
-// }
-
 async function deleteUserById(id) {
   const user = await getUserById(id);
-  // await deleteAllUserRoles(id);
   await db("user").where("id", id).del("");
   return user;
 }
