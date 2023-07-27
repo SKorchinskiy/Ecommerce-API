@@ -1,4 +1,5 @@
 const { mysql: db } = require("../configs/db.config");
+const { redis: storage } = require("../configs/storage.config");
 
 async function getAllProducts({ offset, limit }) {
   return await db("product")
@@ -50,6 +51,43 @@ async function checkProductExists(id) {
   return product ? true : false;
 }
 
+async function updateProductCartAmount(userId, productId, params) {
+  const cart = await storage.get(`${userId}`);
+  const updatedCart = cart ? JSON.parse(cart) : {};
+  let amount = updatedCart[productId]
+    ? updatedCart[productId] + params.amount
+    : params.amount;
+  amount = amount >= 0 ? amount : 0;
+  updatedCart[productId] = amount;
+  await storage.set(`${userId}`, JSON.stringify(updatedCart));
+  console.log(updatedCart);
+  return await getProductCart(userId);
+}
+
+async function getProductCart(userId) {
+  const cartData = JSON.parse(await storage.get(`${userId}`));
+  const products = Object.keys(cartData).map((productId) =>
+    getProductById(productId)
+  );
+  let cart = { totalPrice: 0, products: [], updatedAt: Date(Date.now()) };
+  let totalPrice = 0;
+  for await (let product of products) {
+    const { id, productName, price } = product;
+    if (cartData[id]) {
+      const item = {
+        productId: id,
+        productName,
+        quantity: +cartData[id],
+        price: cartData[id] * price,
+      };
+      totalPrice += item.price;
+      cart.products.push(item);
+    }
+  }
+  cart.totalPrice = totalPrice;
+  return cart;
+}
+
 async function deleteProductById(id) {
   const product = await getProductById(id);
   await db("product").where("id", id).del();
@@ -59,7 +97,9 @@ async function deleteProductById(id) {
 module.exports = {
   getAllProducts,
   getProductById,
+  getProductCart,
   createProduct,
   updateProductById,
+  updateProductCartAmount,
   deleteProductById,
 };

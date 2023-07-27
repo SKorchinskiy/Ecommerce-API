@@ -21,4 +21,11 @@ productRouter
   .put(...adminHandlers, productController.updateProductById)
   .delete(...adminHandlers, productController.deleteProductById);
 
+productRouter.route("/cart").get(productController.getProductCart);
+
+productRouter
+  .route("/cart/:id")
+  .post(isAuthenticated(), productController.addProductToCart)
+  .delete(isAuthenticated(), productController.dropProductFromCart);
+
 module.exports = productRouter;

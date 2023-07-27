@@ -27,6 +27,19 @@ async function getProductById(req, res, next) {
   }
 }
 
+async function getProductCart(req, res, next) {
+  try {
+    const { id: userId } = req.user;
+    const cart = await productService.getProductCart(userId);
+    return res.status(200).json({
+      success: true,
+      cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function createProduct(req, res, next) {
   try {
     const data = Object.assign({}, req.body, { ownerId: req.user.id });
@@ -54,6 +67,45 @@ async function updateProductById(req, res, next) {
   }
 }
 
+async function addProductToCart(req, res, next) {
+  try {
+    const amount = +req.query.amount || 1;
+    const cart = await updateProductCartAmount(+req.user.id, +req.params.id, {
+      amount,
+    });
+    return res.status(200).json({
+      success: true,
+      cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function dropProductFromCart(req, res, next) {
+  try {
+    const amount = -req.query.amount || -1;
+    const cart = await updateProductCartAmount(+req.user.id, +req.params.id, {
+      amount,
+    });
+    return res.status(200).json({
+      success: true,
+      cart,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateProductCartAmount(userId, productId, params) {
+  const cart = await productService.updateProductCartAmount(
+    userId,
+    productId,
+    params
+  );
+  return cart;
+}
+
 async function deleteProductById(req, res, next) {
   try {
     const { id } = req.params;
@@ -70,7 +122,10 @@ async function deleteProductById(req, res, next) {
 module.exports = {
   getAllProducts,
   getProductById,
+  getProductCart,
   createProduct,
   updateProductById,
+  addProductToCart,
+  dropProductFromCart,
   deleteProductById,
 };
