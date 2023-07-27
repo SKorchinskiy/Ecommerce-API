@@ -60,16 +60,19 @@ async function updateProductCartAmount(userId, productId, params) {
   amount = amount >= 0 ? amount : 0;
   updatedCart[productId] = amount;
   await storage.set(`${userId}`, JSON.stringify(updatedCart));
-  console.log(updatedCart);
   return await getProductCart(userId);
 }
 
 async function getProductCart(userId) {
   const cartData = JSON.parse(await storage.get(`${userId}`));
-  const products = Object.keys(cartData).map((productId) =>
+  const products = Object.keys(cartData.products).map((productId) =>
     getProductById(productId)
   );
-  let cart = { totalPrice: 0, products: [], updatedAt: Date(Date.now()) };
+  let cart = {
+    totalPrice: 0,
+    products: [],
+    updatedAt: new Date().toISOString(),
+  };
   let totalPrice = 0;
   for await (let product of products) {
     const { id, productName, price } = product;
@@ -88,6 +91,15 @@ async function getProductCart(userId) {
   return cart;
 }
 
+async function clearProductCart(userId) {
+  const data = {
+    totalPrice: 0,
+    products: [],
+    updatedAt: Date.now(),
+  };
+  return await storage.set(`${userId}`, JSON.stringify(data));
+}
+
 async function deleteProductById(id) {
   const product = await getProductById(id);
   await db("product").where("id", id).del();
@@ -98,6 +110,7 @@ module.exports = {
   getAllProducts,
   getProductById,
   getProductCart,
+  clearProductCart,
   createProduct,
   updateProductById,
   updateProductCartAmount,
