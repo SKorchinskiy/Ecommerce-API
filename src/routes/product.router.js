@@ -6,20 +6,11 @@ const { validateProductInput } = require("../middlewares/product.middleware");
 
 const productRouter = express.Router();
 
-const adminHandlers = [isAuthenticated(), isGrantedAccess("admin")];
-
-productRouter.use(validateProductInput());
-
-productRouter
-  .route("/")
-  .get(productController.getAllProducts)
-  .post(...adminHandlers, productController.createProduct);
-
-productRouter
-  .route("/:id")
-  .get(productController.getProductById)
-  .put(...adminHandlers, productController.updateProductById)
-  .delete(...adminHandlers, productController.deleteProductById);
+productRouter.use(
+  isAuthenticated(),
+  isGrantedAccess("admin"),
+  validateProductInput()
+);
 
 productRouter.route("/cart").get(productController.getProductCart);
 
@@ -27,5 +18,16 @@ productRouter
   .route("/cart/:id")
   .post(isAuthenticated(), productController.addProductToCart)
   .delete(isAuthenticated(), productController.dropProductFromCart);
+
+productRouter
+  .route("/")
+  .get(productController.getAllProducts)
+  .post(productController.createProduct);
+
+productRouter
+  .route("/:id")
+  .get(productController.getProductById)
+  .put(productController.updateProductById)
+  .delete(productController.deleteProductById);
 
 module.exports = productRouter;
