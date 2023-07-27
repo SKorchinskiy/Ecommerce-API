@@ -53,41 +53,59 @@ async function checkProductExists(id) {
 
 async function updateProductCartAmount(userId, productId, params) {
   const cart = await storage.get(`${userId}`);
-  const updatedCart = cart ? JSON.parse(cart) : {};
+  const product = await getProductById(productId);
+  if (params.amount > product.quantity) {
+    const error = new Error(
+      "The required amount of product excides the stock amount!"
+    );
+    error.status = 400;
+    throw error;
+  }
+  let updatedCart = cart ? JSON.parse(cart) : { totalPrice: 0, products: [] };
+  updatedCart.updatedAt = new Date().toISOString();
+
   let amount = updatedCart[productId]
     ? updatedCart[productId] + params.amount
     : params.amount;
   amount = amount >= 0 ? amount : 0;
-  updatedCart[productId] = amount;
+
+  const exists = updatedCart.products.some((product) => {
+    if (product.productId === productId) {
+      product.quantity += amount;
+      return true;
+    }
+    return false;
+  });
+
+  if (!exists && amount) {
+    updatedCart.products.push({
+      productId,
+      productName: product.productName,
+      quantity: amount,
+      price: amount * product.price,
+    });
+  }
+
+  updatedCart.totalPrice = updatedCart.products.reduce(
+    (sum, product) => sum + product.price,
+    0
+  );
+
   await storage.set(`${userId}`, JSON.stringify(updatedCart));
   return await getProductCart(userId);
 }
 
 async function getProductCart(userId) {
-  const cartData = JSON.parse(await storage.get(`${userId}`));
-  const products = Object.keys(cartData.products).map((productId) =>
-    getProductById(productId)
+  const data = await storage.get(`${userId}`);
+  let cartData = JSON.parse(data);
+  let cart = Object.assign(
+    {
+      totalPrice: 0,
+      products: [],
+      updatedAt: new Date().toISOString(),
+    },
+    cartData ?? {}
   );
-  let cart = {
-    totalPrice: 0,
-    products: [],
-    updatedAt: new Date().toISOString(),
-  };
-  let totalPrice = 0;
-  for await (let product of products) {
-    const { id, productName, price } = product;
-    if (cartData[id]) {
-      const item = {
-        productId: id,
-        productName,
-        quantity: +cartData[id],
-        price: cartData[id] * price,
-      };
-      totalPrice += item.price;
-      cart.products.push(item);
-    }
-  }
-  cart.totalPrice = totalPrice;
   return cart;
 }
 

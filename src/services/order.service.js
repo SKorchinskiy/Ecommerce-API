@@ -1,4 +1,5 @@
 const { mysql: db } = require("../configs/db.config");
+const productService = require("../services/product.service");
 
 async function getAllOrders({ offset, limit }) {
   const orders = await db("ORDER_DETAILS")
@@ -32,12 +33,16 @@ async function createOrder(userId, cart, context = db) {
 
 async function updateOrderProducts(orderId, products, context = db) {
   for await (const product of products) {
-    const { productId, quantity, price } = product;
+    const { productId, quantity: orderQuantity, price } = product;
     await context("ORDER_PRODUCT").insert({
       orderId,
       productId,
-      quantity,
+      quantity: orderQuantity,
       price,
+    });
+    const { quantity } = await productService.getProductById(productId);
+    await productService.updateProductById(productId, {
+      quantity: quantity - orderQuantity,
     });
   }
   return 1;
