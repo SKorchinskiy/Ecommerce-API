@@ -8,7 +8,7 @@ async function transaction(cb) {
     return result;
   } catch (e) {
     await trx.rollback();
-    const error = new Error("Failed to complete action!");
+    const error = new Error(`Failed to complete action! ${e.message}`);
     error.status = 500;
     throw error;
   }
