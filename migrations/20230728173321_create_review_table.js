@@ -1,7 +1,6 @@
 exports.up = function (knex) {
-  return knex.schema.createTable("REVIEW", (table) => {
-    table.increments("id").primary();
-
+  return knex.schema.createTable("PRODUCT_REVIEW", (table) => {
+    table.integer("productId").unsigned();
     table.integer("customerId").unsigned();
 
     table.integer("rating").notNullable();
@@ -16,6 +15,14 @@ exports.up = function (knex) {
       .references("id")
       .inTable("USER")
       .onDelete("NO ACTION");
+
+    table
+      .foreign("productId")
+      .references("id")
+      .inTable("PRODUCT")
+      .onDelete("CASCADE");
+
+    table.primary(["customerId", "productId"]);
   });
 };
 
