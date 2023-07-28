@@ -33,14 +33,14 @@ async function createProduct(data) {
   return await getProductById(insertId);
 }
 
-async function updateProductById(id, data) {
+async function updateProductById(id, data, context = db) {
   const exists = await checkProductExists(id);
   if (!exists) {
     const error = new Error("product was not found!");
     error.status = 404;
     throw error;
   }
-  await db("product").where("id", id).update(data);
+  await context("product").where("id", id).update(data);
   return await getProductById(id);
 }
 
@@ -53,25 +53,23 @@ async function checkProductExists(id) {
 
 async function updateProductCartAmount(userId, productId, params) {
   const cart = await storage.get(`${userId}`);
-  const product = await getProductById(productId);
-  if (params.amount > product.quantity) {
-    const error = new Error(
-      "The required amount of product excides the stock amount!"
-    );
-    error.status = 400;
-    throw error;
-  }
-  let updatedCart = cart ? JSON.parse(cart) : { totalPrice: 0, products: [] };
+
+  const updatedCart = cart ? JSON.parse(cart) : { totalPrice: 0, products: [] };
   updatedCart.updatedAt = new Date().toISOString();
 
-  let amount = updatedCart[productId]
-    ? updatedCart[productId] + params.amount
-    : params.amount;
+  const product = await getProductById(productId);
+
+  let amount = updatedCart.products.reduce((sum, product) => {
+    if (product.productId === productId) {
+      return sum + product.quantity;
+    }
+    return sum;
+  }, params.amount);
   amount = amount >= 0 ? amount : 0;
 
   const exists = updatedCart.products.some((product) => {
     if (product.productId === productId) {
-      product.quantity += amount;
+      product.quantity = amount;
       return true;
     }
     return false;
@@ -90,6 +88,14 @@ async function updateProductCartAmount(userId, productId, params) {
     (sum, product) => sum + product.price,
     0
   );
+
+  if (amount > product.quantity) {
+    const error = new Error(
+      "The required amount of product excides the stock amount!"
+    );
+    error.status = 400;
+    throw error;
+  }
 
   await storage.set(`${userId}`, JSON.stringify(updatedCart));
   return await getProductCart(userId);
@@ -113,7 +119,7 @@ async function clearProductCart(userId) {
   const data = {
     totalPrice: 0,
     products: [],
-    updatedAt: Date.now(),
+    updatedAt: new Date().toISOString(),
   };
   return await storage.set(`${userId}`, JSON.stringify(data));
 }
