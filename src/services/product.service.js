@@ -1,11 +1,13 @@
 const { mysql: db } = require("../configs/db.config");
 const { redis: storage } = require("../configs/storage.config");
 
-async function getAllProducts({ offset, limit }) {
+async function getAllProducts(querySnippets) {
+  const { pagination, sort, range } = querySnippets;
   return await db("product")
     .select("id", "productName", "price", "quantity")
-    .offset(offset)
-    .limit(limit);
+    .modify(range, "product", "price")
+    .modify(sort)
+    .modify(pagination);
 }
 
 async function getProductById(id) {

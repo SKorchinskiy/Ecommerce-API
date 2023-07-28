@@ -5,8 +5,8 @@ const queryUtils = require("../utils/query.handler");
 
 async function getAllOrders(req, res, next) {
   try {
-    const params = queryUtils.getPagination(req.query);
-    const orders = await orderService.getAllOrders(params);
+    const snippets = queryUtils.getQuerySnippets(req.query);
+    const orders = await orderService.getAllOrders(snippets);
     return res.status(200).json({
       success: true,
       orders,
@@ -18,9 +18,10 @@ async function getAllOrders(req, res, next) {
 
 async function getUserOrders(req, res, next) {
   try {
-    const params = queryUtils.getPagination(req.query);
-    const { id: userId } = req.params;
-    const orders = await orderService.getUserOrders(userId, params);
+    const snippets = queryUtils.getQuerySnippets(req.query);
+    const userId = +req.params.id;
+
+    const orders = await orderService.getUserOrders(userId, snippets);
     return res.status(200).json({
       success: true,
       orders,

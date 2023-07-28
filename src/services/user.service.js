@@ -52,11 +52,11 @@ async function assignUserRole(userId, role, context = db) {
   return insertId;
 }
 
-async function getAllUsers({ offset, limit }) {
+async function getAllUsers({ pagination, sort }) {
   return await db("user")
     .select("id", "username", "email")
-    .offset(offset)
-    .limit(limit);
+    .modify(sort)
+    .modify(pagination);
 }
 
 async function getUserById(id) {
