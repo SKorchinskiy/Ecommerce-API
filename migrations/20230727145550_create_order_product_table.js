@@ -7,13 +7,13 @@ exports.up = function (knex) {
       .foreign("orderId")
       .references("id")
       .inTable("ORDER_DETAILS")
-      .onDelete("NO ACTION");
+      .onDelete("CASCADE");
 
     table
       .foreign("productId")
       .references("id")
       .inTable("PRODUCT")
-      .onDelete("NO ACTION");
+      .onDelete("CASCADE");
   });
 };
 
