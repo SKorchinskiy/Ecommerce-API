@@ -2,37 +2,20 @@ const { mysql: db } = require("../configs/db.config");
 const productService = require("../services/product.service");
 
 async function getAllOrders({ offset, limit }) {
-  const ordersData = await db
-    .select(
-      "OD.id as orderId",
-      "U.id as customerId",
-      "U.username",
-      "U.email",
-      "OD.totalPrice",
-      "OD.updatedAt"
-    )
-    .from(db.raw("ORDER_DETAILS as OD"))
-    .join(db.raw("USER as U"), "OD.customerId", "U.id")
-    .orderBy("OD.id")
-    .offset(offset)
-    .limit(limit);
-
+  const ordersData = await getOrdersData({ offset, limit });
   const orderIds = ordersData.map((orderData) => orderData.orderId);
-  const productsData = await db
-    .select(
-      "OP.orderId",
-      "P.id as productId",
-      "P.productName",
-      "OP.quantity",
-      "OP.price"
-    )
-    .from(db.raw("PRODUCT as P"))
-    .join(db.raw("ORDER_PRODUCT as OP"), "P.id", "OP.productId")
-    .whereIn("OP.orderId", orderIds);
 
-  const orders = ordersData.map((orderData) => {
+  const productsData = await getOrderedProductsData(orderIds);
+
+  const orders = formatOrderData(ordersData, productsData);
+  return orders;
+}
+
+function formatOrderData(ordersData, productsData) {
+  return ordersData.map((orderData) => {
     const { orderId, customerId, username, email, totalPrice, updatedAt } =
       orderData;
+
     const products = productsData.reduce((prods, productData) => {
       if (productData.orderId === orderId) {
         const { productId, productName, quantity, price } = productData;
@@ -45,6 +28,7 @@ async function getAllOrders({ offset, limit }) {
       }
       return prods;
     }, []);
+
     const order = {
       orderId,
       customer: {
@@ -58,6 +42,60 @@ async function getAllOrders({ offset, limit }) {
     };
     return order;
   });
+}
+
+async function getOrderedProductsData(orderIds) {
+  const specifiedOrders = function (queryBuilder) {
+    if (orderIds) {
+      queryBuilder.whereIn("OP.orderId", orderIds);
+    }
+  };
+
+  const productsData = await db
+    .select(
+      "OP.orderId",
+      "P.id as productId",
+      "P.productName",
+      "OP.quantity",
+      "OP.price"
+    )
+    .from(db.raw("PRODUCT as P"))
+    .join(db.raw("ORDER_PRODUCT as OP"), "P.id", "OP.productId")
+    .modify(specifiedOrders);
+  return productsData;
+}
+
+async function getOrdersData({ offset, limit }, userId) {
+  const specifiedUser = function (queryBuilder) {
+    if (userId) {
+      queryBuilder.where("U.id", userId);
+    }
+  };
+
+  const ordersData = await db
+    .select(
+      "OD.id as orderId",
+      "U.id as customerId",
+      "U.username",
+      "U.email",
+      "OD.totalPrice",
+      "OD.updatedAt"
+    )
+    .from(db.raw("ORDER_DETAILS as OD"))
+    .join(db.raw("USER as U"), "OD.customerId", "U.id")
+    .modify(specifiedUser)
+    .orderBy("OD.id")
+    .offset(offset)
+    .limit(limit);
+
+  return ordersData;
+}
+
+async function getUserOrders(userId, { offset, limit }) {
+  const ordersData = await getOrdersData({ offset, limit }, userId);
+  const orderIds = ordersData.map((orderData) => orderData.orderId);
+  const productsData = await getOrderedProductsData(orderIds);
+  const orders = formatOrderData(ordersData, productsData);
   return orders;
 }
 
@@ -136,10 +174,9 @@ async function updateOrderProducts(orderId, products, context = db) {
   return 1;
 }
 
-async function updateProduct(product, context) {}
-
 module.exports = {
   getAllOrders,
   getOrderById,
+  getUserOrders,
   createOrder,
 };
