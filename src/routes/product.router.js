@@ -1,5 +1,9 @@
 const express = require("express");
+
+const reviewRouter = require("./review.router");
+
 const productController = require("../controllers/product.controller");
+
 const { isAuthenticated } = require("../middlewares/auth.middleware");
 const { isGrantedAccess } = require("../middlewares/role.middleware");
 const { validateProductInput } = require("../middlewares/product.middleware");
@@ -7,6 +11,8 @@ const { validateProductInput } = require("../middlewares/product.middleware");
 const productRouter = express.Router();
 
 productRouter.use(isAuthenticated());
+
+productRouter.use("/:productId/review", reviewRouter);
 
 productRouter.route("/cart").get(productController.getProductCart);
 
