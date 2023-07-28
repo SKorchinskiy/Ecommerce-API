@@ -16,6 +16,20 @@ async function getAllOrders(req, res, next) {
   }
 }
 
+async function getUserOrders(req, res, next) {
+  try {
+    const params = queryUtils.getPagination(req.query);
+    const { id: userId } = req.params;
+    const orders = await orderService.getUserOrders(userId, params);
+    return res.status(200).json({
+      success: true,
+      orders,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getOrderById(req, res, next) {
   try {
     const orderId = +req.params.id;
@@ -49,6 +63,7 @@ async function createOrder(req, res, next) {
 
 module.exports = {
   getAllOrders,
+  getUserOrders,
   getOrderById,
   createOrder,
 };
