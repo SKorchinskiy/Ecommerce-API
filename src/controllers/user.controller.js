@@ -20,8 +20,8 @@ async function createUser(req, res) {
 
 async function getAllUsers(req, res) {
   try {
-    const params = queryUtils.getPagination(req.query);
-    const users = await userService.getAllUsers(params);
+    const snippets = queryUtils.getQuerySnippets(req.query);
+    const users = await userService.getAllUsers(snippets);
     return res.status(200).json({
       success: true,
       users,

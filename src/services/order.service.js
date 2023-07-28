@@ -1,8 +1,8 @@
 const { mysql: db } = require("../configs/db.config");
 const productService = require("../services/product.service");
 
-async function getAllOrders({ offset, limit }) {
-  const ordersData = await getOrdersData({ offset, limit });
+async function getAllOrders(params) {
+  const ordersData = await getOrdersData(params);
   const orderIds = ordersData.map((orderData) => orderData.orderId);
 
   const productsData = await getOrderedProductsData(orderIds);
@@ -65,7 +65,7 @@ async function getOrderedProductsData(orderIds) {
   return productsData;
 }
 
-async function getOrdersData({ offset, limit }, userId) {
+async function getOrdersData({ pagination, sort, range }, userId) {
   const specifiedUser = function (queryBuilder) {
     if (userId) {
       queryBuilder.where("U.id", userId);
@@ -84,15 +84,15 @@ async function getOrdersData({ offset, limit }, userId) {
     .from(db.raw("ORDER_DETAILS as OD"))
     .join(db.raw("USER as U"), "OD.customerId", "U.id")
     .modify(specifiedUser)
-    .orderBy("OD.id")
-    .offset(offset)
-    .limit(limit);
+    .modify(range, "OD", "totalPrice")
+    .modify(sort)
+    .modify(pagination);
 
   return ordersData;
 }
 
-async function getUserOrders(userId, { offset, limit }) {
-  const ordersData = await getOrdersData({ offset, limit }, userId);
+async function getUserOrders(userId, snippets) {
+  const ordersData = await getOrdersData(snippets, userId);
   const orderIds = ordersData.map((orderData) => orderData.orderId);
   const productsData = await getOrderedProductsData(orderIds);
   const orders = formatOrderData(ordersData, productsData);
