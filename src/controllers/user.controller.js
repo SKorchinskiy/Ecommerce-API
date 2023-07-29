@@ -18,6 +18,37 @@ async function createUser(req, res) {
   }
 }
 
+async function getUserAvatar(req, res, next) {
+  try {
+    const userId = +req.user.id;
+    const avatar_path = await userService.getUserAvatarPath(userId);
+    return res.status(200).sendFile(avatar_path);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function uploadUserAvatar(req, res, next) {
+  try {
+    const userId = +req.user.id;
+    const avatar = req.file;
+    const avatar_path = await userService.uploadUserAvatar(userId, avatar);
+    return res.status(200).sendFile(avatar_path);
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function removeUserAvatar(req, res, next) {
+  try {
+    const userId = +req.user.id;
+    const avatar_path = await userService.removeUserAvatar(userId);
+    return res.status(200).sendFile(avatar_path);
+  } catch (error) {
+    next(error);
+  }
+}
+
 async function getAllUsers(req, res) {
   try {
     const snippets = queryUtils.getQuerySnippets(req.query);
@@ -127,6 +158,9 @@ module.exports = {
   getUserById,
   getUserByUsername,
   getUserByEmail,
+  getUserAvatar,
   updateUserById,
+  uploadUserAvatar,
+  removeUserAvatar,
   deleteUserById,
 };
