@@ -1,6 +1,8 @@
+const fs = require("fs");
 const bcrypt = require("bcrypt");
 const { mysql: db } = require("../configs/db.config");
 const { transaction } = require("../utils/transaction.handler");
+const { getDefaultAvatarPath } = require("../utils/upload.handler");
 
 async function createUser(data) {
   const { username, email, password } = data;
@@ -24,6 +26,42 @@ async function createUser(data) {
   });
 
   return await getUserById(userId);
+}
+
+async function checkUserExists(userId) {
+  const [user] = await db("USER").where("id", userId).select("id");
+  return user ? true : false;
+}
+
+async function getUserAvatarPath(userId) {
+  const userExists = await checkUserExists(userId);
+  if (!userExists) {
+    const error = new Error("User was not found!");
+    error.status = 404;
+    throw error;
+  }
+  const [{ avatar_path }] = await db("USER")
+    .select("avatar_path")
+    .where("id", userId);
+  return avatar_path;
+}
+
+async function uploadUserAvatar(userId, avatar) {
+  await db("USER").update({ avatar_path: avatar.path }).where("id", userId);
+  return await getUserAvatarPath(userId);
+}
+
+async function removeUserAvatar(userId) {
+  const avatar_path = await getUserAvatarPath(userId);
+  if (avatar_path === getDefaultAvatarPath()) {
+    const error = new Error(`Currently, you haven't set an avatar!`);
+    error.status = 400;
+    throw error;
+  }
+  await db("USER").where("id", userId).update({
+    avatar_path: getDefaultAvatarPath(),
+  });
+  return await getUserAvatarPath(userId);
 }
 
 async function getEncryptedPassword(password) {
@@ -126,11 +164,14 @@ async function deleteUserById(id) {
 
 module.exports = {
   createUser,
+  getUserAvatarPath,
+  uploadUserAvatar,
   getAllUsers,
   getUserById,
   getUserByUsername,
   getUserByEmail,
   getUserRoles,
   updateUserById,
+  removeUserAvatar,
   deleteUserById,
 };
