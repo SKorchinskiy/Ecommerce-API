@@ -13,11 +13,13 @@
   },
   "keywords": [
     "ecommerce",
+    "api",
     "node",
     "js",
     "express",
     "backend",
-    "mongodb"
+    "mysql",
+    "knex"
   ],
   "author": "Oleksandr Korchynskyy",
   "license": "MIT",
